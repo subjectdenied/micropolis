@@ -1,0 +1,48 @@
+/* Micropolis Admin Settings */
+
+.micropolis-table {
+	max-width: 700px;
+}
+
+.micropolis-table td,
+.micropolis-table th {
+	vertical-align: middle;
+}
+
+.micropolis-flag-cell {
+	font-size: 24px;
+	text-align: center;
+	width: 50px;
+}
+
+.micropolis-code {
+	width: 60px !important;
+	text-transform: lowercase;
+	text-align: center;
+	font-weight: 600;
+}
+
+.micropolis-slug {
+	width: 250px !important;
+}
+
+.micropolis-status {
+	width: 120px;
+	font-size: 13px;
+}
+
+.micropolis-status .slug-ok {
+	color: #46b450;
+}
+
+.micropolis-status .slug-fail {
+	color: #dc3232;
+}
+
+.micropolis-remove {
+	color: #dc3232 !important;
+	font-size: 18px !important;
+	font-weight: bold;
+	line-height: 1;
+	padding: 2px 8px !important;
+}
