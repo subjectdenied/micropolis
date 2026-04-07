@@ -1,6 +1,7 @@
 /* Micropolis Language Switcher — Frontend */
 /* All rules scoped to #micropolis-switcher to prevent theme CSS bleed */
 
+/* Default: fixed fallback if JS injection target is missing */
 #micropolis-switcher {
 	position: fixed;
 	top: 30px;
@@ -11,15 +12,16 @@
 	line-height: 1.4;
 }
 
-/* When injected into Divi header */
+/* When injected into Divi header menu wrap */
 #micropolis-switcher.micropolis-inline {
 	position: relative;
 	top: auto;
 	right: auto;
 	display: flex;
 	align-items: center;
+	flex: 0 0 auto;
 	margin-left: 8px;
-	flex-shrink: 0;
+	z-index: 99;
 }
 
 /* Admin bar fallback */
@@ -41,6 +43,7 @@
 	font-weight: 600;
 	transition: background 0.2s;
 	line-height: 1.4;
+	white-space: nowrap;
 }
 
 #micropolis-switcher .micropolis-toggle:hover {
@@ -124,17 +127,12 @@
 	color: #e74406 !important;
 }
 
-/* ---- Responsive ---- */
+/* ---- Responsive: Divi mobile breakpoint ---- */
 
 @media (max-width: 980px) {
 	#micropolis-switcher.micropolis-inline {
-		position: fixed;
-		top: 20px;
-		right: 60px;
 		margin-left: 0;
-	}
-	.admin-bar #micropolis-switcher.micropolis-inline {
-		top: 52px;
+		margin-right: 4px;
 	}
 	#micropolis-switcher .micropolis-toggle {
 		padding: 5px 8px;
@@ -143,16 +141,17 @@
 	#micropolis-switcher .micropolis-current-flag {
 		font-size: 16px;
 	}
+	.admin-bar #micropolis-switcher:not(.micropolis-inline) {
+		top: 52px;
+	}
 }
 
 @media (max-width: 479px) {
-	#micropolis-switcher,
-	#micropolis-switcher.micropolis-inline {
+	#micropolis-switcher:not(.micropolis-inline) {
 		top: 15px;
 		right: 50px;
 	}
-	.admin-bar #micropolis-switcher,
-	.admin-bar #micropolis-switcher.micropolis-inline {
+	.admin-bar #micropolis-switcher:not(.micropolis-inline) {
 		top: 47px;
 	}
 	#micropolis-switcher .micropolis-toggle {

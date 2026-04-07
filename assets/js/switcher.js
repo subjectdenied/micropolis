@@ -62,15 +62,22 @@
 		}
 	}
 
-	// Move switcher into the Divi header (next to search icon)
+	// Move switcher into the Divi header
 	document.addEventListener('DOMContentLoaded', function () {
 		var switcher = document.getElementById('micropolis-switcher');
 		if (switcher) {
-			// Try to inject into Divi menu inner container (after search)
-			var menuWrap = document.querySelector('.et_pb_menu_inner_container')
-				|| document.querySelector('.et_pb_row_0_tb_header');
+			// Insert into the menu wrap — before the search icon so it sits
+			// between the last nav item / hamburger and the search/cart icons.
+			var menuWrap = document.querySelector('.et_pb_menu__wrap');
 			if (menuWrap) {
-				menuWrap.appendChild(switcher);
+				// Insert before the first icon element (search, cart) if present,
+				// otherwise append at the end (next to hamburger on mobile).
+				var firstIcon = menuWrap.querySelector('.et_pb_menu__icon');
+				if (firstIcon) {
+					menuWrap.insertBefore(switcher, firstIcon);
+				} else {
+					menuWrap.appendChild(switcher);
+				}
 				switcher.classList.add('micropolis-inline');
 			}
 
