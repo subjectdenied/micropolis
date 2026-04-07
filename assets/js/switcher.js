@@ -4,6 +4,8 @@
  * - Auto-detects browser language and shows matching flag/code
  * - Stores user's manual choice in localStorage
  * - Redirects on first visit if browser language matches a configured language
+ * - Desktop: inline dropdown in Divi header
+ * - Mobile (≤980px): language items inside the hamburger menu
  */
 (function () {
 	'use strict';
@@ -35,7 +37,6 @@
 	}
 
 	function detectCurrentLang() {
-		// Check if current URL matches any configured language page
 		var path = window.location.pathname.replace(/\/+$/, '').replace(/^\/+/, '');
 		for (var i = 0; i < languages.length; i++) {
 			var langUrl = languages[i].url.replace(/\/+$/, '').replace(/^https?:\/\/[^/]+\/?/, '');
@@ -46,13 +47,22 @@
 		return null;
 	}
 
-	// Determine active language
+	// Language names for mobile menu display
+	var langNames = {
+		de: 'Deutsch', en: 'English', fr: 'Français', es: 'Español',
+		it: 'Italiano', pt: 'Português', nl: 'Nederlands', pl: 'Polski',
+		cs: 'Čeština', sk: 'Slovenčina', hu: 'Magyar', ro: 'Română',
+		hr: 'Hrvatski', sr: 'Srpski', sl: 'Slovenščina', bg: 'Български',
+		tr: 'Türkçe', ru: 'Русский', uk: 'Українська', ar: 'العربية',
+		zh: '中文', ja: '日本語', ko: '한국어',
+	};
+
 	var stored = getStoredLang();
 	var current = detectCurrentLang();
 	var browserLang = getBrowserLang();
 	var activeLang = current || stored || languages[0].code;
 
-	// Auto-redirect on first visit (no stored preference, not already on a language page)
+	// Auto-redirect on first visit
 	if (!stored && !current && findLang(browserLang)) {
 		var target = findLang(browserLang);
 		if (target && target.code !== languages[0].code) {
@@ -62,16 +72,16 @@
 		}
 	}
 
-	// Move switcher into the Divi header
 	document.addEventListener('DOMContentLoaded', function () {
 		var switcher = document.getElementById('micropolis-switcher');
-		if (switcher) {
-			// Insert into the menu wrap — before the search icon so it sits
-			// between the last nav item / hamburger and the search/cart icons.
+		if (!switcher) return;
+
+		var isMobile = window.matchMedia('(max-width: 980px)');
+
+		// ── Desktop: inject switcher into Divi header menu wrap ──
+		function setupDesktop() {
 			var menuWrap = document.querySelector('.et_pb_menu__wrap');
 			if (menuWrap) {
-				// Insert before the first icon element (search, cart) if present,
-				// otherwise append at the end (next to hamburger on mobile).
 				var firstIcon = menuWrap.querySelector('.et_pb_menu__icon');
 				if (firstIcon) {
 					menuWrap.insertBefore(switcher, firstIcon);
@@ -80,35 +90,85 @@
 				}
 				switcher.classList.add('micropolis-inline');
 			}
-
-			// Hide switcher when Divi search is open, delay reappear until animation ends
-			var searchTimer;
-			var observer = new MutationObserver(function () {
-				var searchOpen = document.querySelector('.et_pb_menu__search-container--visible');
-				clearTimeout(searchTimer);
-				if (searchOpen) {
-					switcher.style.visibility = 'hidden';
-				} else {
-					// Wait for the slide-out animation to finish before showing
-					searchTimer = setTimeout(function () {
-						switcher.style.visibility = '';
-					}, 400);
-				}
-			});
-			observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
 		}
-	});
 
-	// Update the toggle to show the active language
-	document.addEventListener('DOMContentLoaded', function () {
-		var switcher = document.getElementById('micropolis-switcher');
+		// ── Mobile: add language items into the hamburger menu ──
+		function injectMobileMenuItems() {
+			var mobileMenu = document.querySelector('.et_mobile_menu');
+			if (!mobileMenu || mobileMenu.querySelector('.micropolis-mobile-lang')) return;
+
+			// Add a separator
+			var sep = document.createElement('li');
+			sep.className = 'micropolis-mobile-lang micropolis-mobile-sep';
+			sep.setAttribute('aria-hidden', 'true');
+			mobileMenu.appendChild(sep);
+
+			// Add each language as a menu item
+			for (var i = 0; i < languages.length; i++) {
+				var lang = languages[i];
+				var li = document.createElement('li');
+				li.className = 'micropolis-mobile-lang menu-item';
+				if (lang.code === activeLang) {
+					li.classList.add('micropolis-mobile-active');
+				}
+				var a = document.createElement('a');
+				a.href = lang.url;
+				a.setAttribute('data-lang', lang.code);
+				a.textContent = lang.flag + '  ' + (langNames[lang.code] || lang.code.toUpperCase());
+				a.addEventListener('click', function () {
+					setStoredLang(this.getAttribute('data-lang'));
+				});
+				li.appendChild(a);
+				mobileMenu.appendChild(li);
+			}
+		}
+
+		// Watch for Divi's mobile menu to appear (it's created dynamically on first hamburger click)
+		function watchMobileMenu() {
+			var menuWrap = document.querySelector('.et_pb_menu__wrap') || document.body;
+			var observer = new MutationObserver(function () {
+				injectMobileMenuItems();
+			});
+			observer.observe(menuWrap, { childList: true, subtree: true });
+			// Also try immediately in case the menu already exists
+			injectMobileMenuItems();
+		}
+
+		// Apply the right mode based on viewport
+		function applyMode() {
+			if (isMobile.matches) {
+				switcher.style.display = 'none';
+				watchMobileMenu();
+			} else {
+				switcher.style.display = '';
+				setupDesktop();
+			}
+		}
+
+		applyMode();
+		isMobile.addEventListener('change', applyMode);
+
+		// ── Desktop: search icon visibility toggle ──
+		var searchTimer;
+		var observer = new MutationObserver(function () {
+			var searchOpen = document.querySelector('.et_pb_menu__search-container--visible');
+			clearTimeout(searchTimer);
+			if (searchOpen) {
+				switcher.style.visibility = 'hidden';
+			} else {
+				searchTimer = setTimeout(function () {
+					switcher.style.visibility = '';
+				}, 400);
+			}
+		});
+		observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
+
+		// ── Desktop: dropdown behavior ──
 		var toggle = document.getElementById('micropolis-toggle');
 		var dropdown = document.getElementById('micropolis-dropdown');
-		if (!switcher || !toggle || !dropdown) return;
+		if (!toggle || !dropdown) return;
 
 		var active = findLang(activeLang) || languages[0];
-
-		// Set toggle display
 		var flagEl = toggle.querySelector('.micropolis-current-flag');
 		var codeEl = toggle.querySelector('.micropolis-current-code');
 		if (flagEl) flagEl.textContent = active.flag;
@@ -122,7 +182,6 @@
 			}
 		}
 
-		// Toggle dropdown
 		toggle.addEventListener('click', function (e) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -132,7 +191,6 @@
 			switcher.setAttribute('data-open', open ? 'true' : 'false');
 		});
 
-		// Close on outside click
 		document.addEventListener('click', function (e) {
 			if (!switcher.contains(e.target)) {
 				dropdown.hidden = true;
@@ -141,7 +199,6 @@
 			}
 		});
 
-		// Store choice on click
 		var allLinks = dropdown.querySelectorAll('a[data-lang]');
 		for (var j = 0; j < allLinks.length; j++) {
 			allLinks[j].addEventListener('click', function () {
@@ -149,7 +206,6 @@
 			});
 		}
 
-		// Close on Escape
 		document.addEventListener('keydown', function (e) {
 			if (e.key === 'Escape') {
 				dropdown.hidden = true;

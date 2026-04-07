@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Micropolis
  * Description: Lightweight language switcher — dropdown with flags, auto-detects browser language, links to configured pages per language.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Christian Sigl
  * License:     GPL-2.0+
  * Text Domain: micropolis
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'MICROPOLIS_VERSION', '1.0.0' );
+define( 'MICROPOLIS_VERSION', '1.1.0' );
 define( 'MICROPOLIS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MICROPOLIS_URL', plugin_dir_url( __FILE__ ) );
 
