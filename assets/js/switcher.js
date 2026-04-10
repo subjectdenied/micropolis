@@ -9,6 +9,9 @@
 (function () {
 	'use strict';
 
+	// Clean up localStorage from previous versions
+	try { localStorage.removeItem('micropolis_lang'); } catch (e) { /* noop */ }
+
 	var data = window.micropolisData || {};
 	var languages = data.languages || [];
 
