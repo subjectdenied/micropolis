@@ -10,7 +10,19 @@ class Micropolis_Switcher {
 		}
 	}
 
+	/**
+	 * Check if we're in Divi Visual Builder or admin context.
+	 */
+	private function is_builder_or_admin() {
+		if ( is_admin() ) return true;
+		if ( function_exists( 'et_core_is_fb_enabled' ) && et_core_is_fb_enabled() ) return true;
+		if ( isset( $_GET['et_fb'] ) ) return true;
+		return false;
+	}
+
 	public function enqueue_assets() {
+		if ( $this->is_builder_or_admin() ) return;
+
 		wp_enqueue_style( 'micropolis-switcher', MICROPOLIS_URL . 'assets/css/switcher.css', array(), MICROPOLIS_VERSION );
 		wp_enqueue_script( 'micropolis-switcher', MICROPOLIS_URL . 'assets/js/switcher.js', array(), MICROPOLIS_VERSION, true );
 
@@ -42,6 +54,8 @@ class Micropolis_Switcher {
 	}
 
 	public function render_switcher() {
+		if ( $this->is_builder_or_admin() ) return;
+
 		$languages = get_option( 'micropolis_languages', array() );
 		if ( count( $languages ) < 2 ) return;
 

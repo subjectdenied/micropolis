@@ -1,33 +1,18 @@
 /**
  * Micropolis Language Switcher — Frontend
  *
- * - Auto-detects browser language and shows matching flag/code
- * - Stores user's manual choice in localStorage
- * - Redirects on first visit if browser language matches a configured language
+ * - Always shows the default (first) language in the toggle
+ * - Acts as jump-links to configured pages — no language persistence
  * - Desktop: inline dropdown in Divi header
  * - Mobile (≤980px): language items inside the hamburger menu
  */
 (function () {
 	'use strict';
 
-	var STORAGE_KEY = 'micropolis_lang';
 	var data = window.micropolisData || {};
 	var languages = data.languages || [];
 
 	if (languages.length < 2) return;
-
-	function getStoredLang() {
-		try { return localStorage.getItem(STORAGE_KEY); } catch (e) { return null; }
-	}
-
-	function setStoredLang(code) {
-		try { localStorage.setItem(STORAGE_KEY, code); } catch (e) { /* noop */ }
-	}
-
-	function getBrowserLang() {
-		var nav = navigator.language || navigator.userLanguage || '';
-		return nav.split('-')[0].toLowerCase();
-	}
 
 	function findLang(code) {
 		for (var i = 0; i < languages.length; i++) {
@@ -57,20 +42,9 @@
 		zh: '中文', ja: '日本語', ko: '한국어',
 	};
 
-	var stored = getStoredLang();
-	var current = detectCurrentLang();
-	var browserLang = getBrowserLang();
-	var activeLang = current || stored || languages[0].code;
-
-	// Auto-redirect on first visit
-	if (!stored && !current && findLang(browserLang)) {
-		var target = findLang(browserLang);
-		if (target && target.code !== languages[0].code) {
-			setStoredLang(target.code);
-			window.location.href = target.url;
-			return;
-		}
-	}
+	// Show detected language if current page matches a configured language, otherwise default
+	var currentCode = detectCurrentLang();
+	var activeLang = (currentCode && findLang(currentCode)) ? findLang(currentCode) : languages[0];
 
 	document.addEventListener('DOMContentLoaded', function () {
 		var switcher = document.getElementById('micropolis-switcher');
@@ -108,16 +82,9 @@
 				var lang = languages[i];
 				var li = document.createElement('li');
 				li.className = 'micropolis-mobile-lang menu-item';
-				if (lang.code === activeLang) {
-					li.classList.add('micropolis-mobile-active');
-				}
 				var a = document.createElement('a');
 				a.href = lang.url;
-				a.setAttribute('data-lang', lang.code);
 				a.textContent = lang.flag + '  ' + (langNames[lang.code] || lang.code.toUpperCase());
-				a.addEventListener('click', function () {
-					setStoredLang(this.getAttribute('data-lang'));
-				});
 				li.appendChild(a);
 				mobileMenu.appendChild(li);
 			}
@@ -168,19 +135,11 @@
 		var dropdown = document.getElementById('micropolis-dropdown');
 		if (!toggle || !dropdown) return;
 
-		var active = findLang(activeLang) || languages[0];
+		// Show active language (detected from URL, or default)
 		var flagEl = toggle.querySelector('.micropolis-current-flag');
 		var codeEl = toggle.querySelector('.micropolis-current-code');
-		if (flagEl) flagEl.textContent = active.flag;
-		if (codeEl) codeEl.textContent = active.code.toUpperCase();
-
-		// Highlight active in dropdown
-		var links = dropdown.querySelectorAll('a[data-lang]');
-		for (var i = 0; i < links.length; i++) {
-			if (links[i].getAttribute('data-lang') === activeLang) {
-				links[i].classList.add('micropolis-active');
-			}
-		}
+		if (flagEl) flagEl.textContent = activeLang.flag;
+		if (codeEl) codeEl.textContent = activeLang.code.toUpperCase();
 
 		toggle.addEventListener('click', function (e) {
 			e.preventDefault();
@@ -198,13 +157,6 @@
 				switcher.setAttribute('data-open', 'false');
 			}
 		});
-
-		var allLinks = dropdown.querySelectorAll('a[data-lang]');
-		for (var j = 0; j < allLinks.length; j++) {
-			allLinks[j].addEventListener('click', function () {
-				setStoredLang(this.getAttribute('data-lang'));
-			});
-		}
 
 		document.addEventListener('keydown', function (e) {
 			if (e.key === 'Escape') {
