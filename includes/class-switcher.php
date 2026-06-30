@@ -23,10 +23,15 @@ class Micropolis_Switcher {
 	public function enqueue_assets() {
 		if ( $this->is_builder_or_admin() ) return;
 
+		// Only load assets when the switcher will actually render. Mirrors the
+		// >= 2 languages guard in render_switcher(), so single-language sites
+		// (or any context where no switcher shows) don't ship the CSS/JS.
+		$languages = get_option( 'micropolis_languages', array() );
+		if ( count( $languages ) < 2 ) return;
+
 		wp_enqueue_style( 'micropolis-switcher', MICROPOLIS_URL . 'assets/css/switcher.css', array(), MICROPOLIS_VERSION );
 		wp_enqueue_script( 'micropolis-switcher', MICROPOLIS_URL . 'assets/js/switcher.js', array(), MICROPOLIS_VERSION, true );
 
-		$languages = get_option( 'micropolis_languages', array() );
 		$items = array();
 
 		foreach ( $languages as $lang ) {
